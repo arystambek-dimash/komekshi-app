@@ -54,7 +54,7 @@ export function AnalyzingStep() {
                   style={[
                     styles.dot,
                     {
-                      backgroundColor: theme.colors.gray[300],
+                      backgroundColor: theme.colors.border.default,
                       marginHorizontal: theme.spacing.xs,
                     },
                   ]}

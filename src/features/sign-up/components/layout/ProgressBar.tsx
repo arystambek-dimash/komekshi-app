@@ -39,7 +39,7 @@ export function ProgressBar({ currentStep, totalSteps, animated = true }: Progre
       style={[
         styles.container,
         {
-          backgroundColor: theme.colors.gray[200],
+          backgroundColor: theme.colors.surfaceSecondary,
           borderRadius: theme.borderRadius.full,
         },
       ]}

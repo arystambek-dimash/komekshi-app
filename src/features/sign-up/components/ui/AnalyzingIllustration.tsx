@@ -9,7 +9,7 @@ import Animated, {
   withSequence,
   Easing,
 } from 'react-native-reanimated';
-import { useAppTheme } from '@/src/shared/theme';
+import { useAppTheme, useTheme } from '@/src/shared/theme';
 
 interface AnalyzingIllustrationProps {
   size?: number;
@@ -20,6 +20,7 @@ const AnimatedView = Animated.createAnimatedComponent(View);
 
 export function AnalyzingIllustration({ size = 200, isComplete = false }: AnalyzingIllustrationProps) {
   const theme = useAppTheme();
+  const { isDark } = useTheme();
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
 
@@ -58,7 +59,7 @@ export function AnalyzingIllustration({ size = 200, isComplete = false }: Analyz
       <AnimatedView style={animatedStyle}>
         <Svg width={size} height={size} viewBox="0 0 200 200">
           {/* Background circle */}
-          <Circle cx="100" cy="100" r="80" fill={theme.colors.primary[50]} />
+          <Circle cx="100" cy="100" r="80" fill={isDark ? theme.colors.primary[900] : theme.colors.primary[50]} />
 
           {/* Main robot/AI head shape */}
           <G>
@@ -69,7 +70,7 @@ export function AnalyzingIllustration({ size = 200, isComplete = false }: Analyz
               width="80"
               height="70"
               rx="20"
-              fill={theme.colors.gray[200]}
+              fill={isDark ? theme.colors.gray[700] : theme.colors.gray[200]}
             />
 
             {/* Face plate */}
@@ -79,7 +80,7 @@ export function AnalyzingIllustration({ size = 200, isComplete = false }: Analyz
               width="60"
               height="50"
               rx="10"
-              fill={theme.colors.white}
+              fill={isDark ? theme.colors.gray[800] : theme.colors.white}
             />
 
             {/* Eyes */}
@@ -99,20 +100,20 @@ export function AnalyzingIllustration({ size = 200, isComplete = false }: Analyz
             {/* Antenna */}
             <Path
               d="M100 50 L100 35"
-              stroke={theme.colors.gray[400]}
+              stroke={isDark ? theme.colors.gray[500] : theme.colors.gray[400]}
               strokeWidth="4"
               strokeLinecap="round"
             />
             <Circle cx="100" cy="30" r="6" fill={theme.colors.secondary[400]} />
 
             {/* Ears/Side panels */}
-            <Rect x="45" y="70" width="15" height="30" rx="5" fill={theme.colors.gray[300]} />
-            <Rect x="140" y="70" width="15" height="30" rx="5" fill={theme.colors.gray[300]} />
+            <Rect x="45" y="70" width="15" height="30" rx="5" fill={isDark ? theme.colors.gray[600] : theme.colors.gray[300]} />
+            <Rect x="140" y="70" width="15" height="30" rx="5" fill={isDark ? theme.colors.gray[600] : theme.colors.gray[300]} />
 
             {/* Body hint */}
             <Path
               d="M70 120 Q100 140 130 120"
-              fill={theme.colors.gray[200]}
+              fill={isDark ? theme.colors.gray[700] : theme.colors.gray[200]}
             />
           </G>
 

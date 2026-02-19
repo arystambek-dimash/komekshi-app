@@ -23,12 +23,12 @@ export function SkillChip({ label, selected, onPress, size = 'md' }: SkillChipPr
       style={[
         styles.chip,
         {
-          backgroundColor: selected ? theme.colors.primary[500] : theme.colors.gray[100],
+          backgroundColor: selected ? theme.colors.primary[500] : theme.colors.surfaceSecondary,
           borderRadius: theme.borderRadius.full,
           paddingVertical,
           paddingHorizontal,
           borderWidth: 1,
-          borderColor: selected ? theme.colors.primary[500] : theme.colors.gray[200],
+          borderColor: selected ? theme.colors.primary[500] : theme.colors.border.default,
         },
       ]}
     >

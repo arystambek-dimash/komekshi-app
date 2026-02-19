@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Text } from '@/src/shared/components/ui';
-import { useAppTheme } from '@/src/shared/theme';
+import { useAppTheme, useTheme } from '@/src/shared/theme';
 
 interface JobResultItemProps {
   title: string;
@@ -13,6 +13,12 @@ interface JobResultItemProps {
 
 export function JobResultItem({ title, subtitle, salary, selected = false, onPress }: JobResultItemProps) {
   const theme = useAppTheme();
+  const { isDark } = useTheme();
+
+  // In dark mode, use surface colors; in light mode, use primary tint for selected
+  const backgroundColor = selected
+    ? (isDark ? theme.colors.primary[900] : theme.colors.primary[50])
+    : theme.colors.surface;
 
   return (
     <TouchableOpacity
@@ -21,7 +27,7 @@ export function JobResultItem({ title, subtitle, salary, selected = false, onPre
       style={[
         styles.container,
         {
-          backgroundColor: selected ? theme.colors.primary[50] : theme.colors.background,
+          backgroundColor,
           borderRadius: theme.borderRadius.lg,
           padding: theme.spacing.md,
           borderWidth: selected ? 2 : 1,

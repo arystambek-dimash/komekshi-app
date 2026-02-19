@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {View, StyleSheet} from 'react-native';
 import Animated, {FadeInDown} from 'react-native-reanimated';
 import {Button, Text} from '@/src/shared/components/ui';
-import {useAppTheme} from '@/src/shared/theme';
+import {useAppTheme, useTheme} from '@/src/shared/theme';
 import {useSignUp} from '@/src/features/sign-up';
 import {StepContainer} from '@/src/features/sign-up';
 import {CountrySelector, CitySelector} from '@/src/features/onboarding/components';
@@ -10,6 +10,7 @@ import {Country} from '@/src/features/onboarding/constants/locations';
 
 export function MarketRegionStep() {
     const theme = useAppTheme();
+    const { isDark } = useTheme();
     const {state, setCountry, setCity, goNext, goBack, stepNumber, totalSteps} = useSignUp();
     const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
     const [selectedCity, setSelectedCity] = useState<string | null>(state.city || null);
@@ -85,7 +86,7 @@ export function MarketRegionStep() {
                         style={[
                             styles.summaryCard,
                             {
-                                backgroundColor: theme.colors.primary[50],
+                                backgroundColor: isDark ? theme.colors.primary[900] : theme.colors.primary[50],
                                 borderRadius: theme.borderRadius.lg,
                                 marginTop: theme.spacing.xl,
                             },
