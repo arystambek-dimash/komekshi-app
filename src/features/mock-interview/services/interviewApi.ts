@@ -13,7 +13,7 @@ const FALLBACK_QUESTIONS = [
 ];
 
 export const DEFAULT_OPENING_QUESTION =
-  'Good morning, Dimash. Tell me briefly about your backend experience and the systems you are most confident with.';
+  'Good morning, Aisana. Tell me briefly about your backend experience and the systems you are most confident with.';
 
 const WAIT_MS = 1200;
 

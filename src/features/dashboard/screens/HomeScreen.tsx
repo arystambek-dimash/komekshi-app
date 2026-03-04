@@ -19,7 +19,7 @@ export function HomeScreen() {
             <View style={[styles.content, {paddingHorizontal: theme.spacing.lg}]}>
                 {/* Greeting Section - Fixed at top */}
                 <View style={[styles.header, {marginTop: theme.spacing.md, marginBottom: theme.spacing.lg}]}>
-                    <Text style={[styles.greeting, {color: theme.colors.primary[500]}]}>Good Morning, Dimash</Text>
+                    <Text style={[styles.greeting, {color: theme.colors.primary[500]}]}>Good Morning, Aisana</Text>
                     <Text style={[styles.targetJob, {color: theme.colors.text.secondary}]}>Target Backend Engineer</Text>
                 </View>
 

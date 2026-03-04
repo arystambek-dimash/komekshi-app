@@ -34,7 +34,7 @@ export function NameStep() {
         </Text>
 
         <Input
-          placeholder="dimash"
+          placeholder="Aisana"
           value={state.name}
           onChangeText={setName}
           autoCapitalize="words"

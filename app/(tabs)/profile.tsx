@@ -10,8 +10,8 @@ import { useAppTheme } from '@/src/shared/theme';
 
 // Mock user data - in real app this would come from context/store
 const USER_DATA = {
-  name: 'Dimash',
-  email: 'dimash@example.com',
+  name: 'Aisana',
+  email: 'aisana@example.com',
   avatar: null, // placeholder - will use initials
   region: {
     country: 'Kazakhstan',
