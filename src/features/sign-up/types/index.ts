@@ -6,6 +6,7 @@ export type SignUpStep =
   | 'name'
   | 'marketRegion'
   | 'targetJob'
+  | 'skills'
   | 'analyzing';
 
 export interface Job {
@@ -23,7 +24,9 @@ export interface SignUpState {
   otpCode: string;
   name: string;
   country: string;
+  countryId: number | null;
   city: string;
+  cityId: number | null;
   selectedSkills: string[];
   targetJob: Job | null;
   isAnalyzing: boolean;
@@ -43,8 +46,8 @@ export type SignUpAction =
   | { type: 'SET_CONFIRM_PASSWORD'; payload: string }
   | { type: 'SET_OTP_CODE'; payload: string }
   | { type: 'SET_NAME'; payload: string }
-  | { type: 'SET_COUNTRY'; payload: string }
-  | { type: 'SET_CITY'; payload: string }
+  | { type: 'SET_COUNTRY'; payload: { name: string; id: number } }
+  | { type: 'SET_CITY'; payload: { name: string; id: number } }
   | { type: 'TOGGLE_SKILL'; payload: string }
   | { type: 'SET_TARGET_JOB'; payload: Job | null }
   | { type: 'SET_ERROR'; payload: { field: keyof SignUpState['errors']; message: string } }
@@ -63,6 +66,7 @@ export const STEP_ORDER: SignUpStep[] = [
   'otp',
   'name',
   'marketRegion',
+  'skills',
   'targetJob',
   'analyzing',
 ];
@@ -74,6 +78,7 @@ export const STEP_NUMBERS: Record<SignUpStep, number> = {
   otp: 3,
   name: 4,
   marketRegion: 5,
-  targetJob: 6,
-  analyzing: 7,
+  skills: 6,
+  targetJob: 7,
+  analyzing: 8,
 };

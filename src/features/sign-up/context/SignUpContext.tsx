@@ -12,8 +12,8 @@ interface SignUpContextValue {
   setConfirmPassword: (password: string) => void;
   setOtpCode: (code: string) => void;
   setName: (name: string) => void;
-  setCountry: (country: string) => void;
-  setCity: (city: string) => void;
+  setCountry: (name: string, id: number) => void;
+  setCity: (name: string, id: number) => void;
   toggleSkill: (skill: string) => void;
   setTargetJob: (job: Job | null) => void;
   setError: (field: keyof SignUpState['errors'], message: string) => void;
@@ -57,8 +57,8 @@ export function SignUpProvider({ children }: SignUpProviderProps) {
         dispatch({ type: 'SET_CONFIRM_PASSWORD', payload: password }),
       setOtpCode: (code: string) => dispatch({ type: 'SET_OTP_CODE', payload: code }),
       setName: (name: string) => dispatch({ type: 'SET_NAME', payload: name }),
-      setCountry: (country: string) => dispatch({ type: 'SET_COUNTRY', payload: country }),
-      setCity: (city: string) => dispatch({ type: 'SET_CITY', payload: city }),
+      setCountry: (name: string, id: number) => dispatch({ type: 'SET_COUNTRY', payload: { name, id } }),
+      setCity: (name: string, id: number) => dispatch({ type: 'SET_CITY', payload: { name, id } }),
       toggleSkill: (skill: string) => dispatch({ type: 'TOGGLE_SKILL', payload: skill }),
       setTargetJob: (job: Job | null) => dispatch({ type: 'SET_TARGET_JOB', payload: job }),
       setError: (field: keyof SignUpState['errors'], message: string) =>

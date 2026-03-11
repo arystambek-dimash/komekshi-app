@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,6 +6,8 @@ import {
   Modal,
   FlatList,
   Dimensions,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -16,14 +18,72 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Text } from '@/src/shared/components/ui';
 import { useAppTheme } from '@/src/shared/theme';
-import { Country, COUNTRIES } from '../constants/locations';
+import { locationsService } from '@/src/shared/api/services';
+import { CountryDTO } from '@/src/shared/api/types';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Country flags mapping (common countries)
+const COUNTRY_FLAGS: Record<string, string> = {
+  'Kazakhstan': '🇰🇿',
+  'Russia': '🇷🇺',
+  'United States': '🇺🇸',
+  'United Kingdom': '🇬🇧',
+  'Germany': '🇩🇪',
+  'France': '🇫🇷',
+  'China': '🇨🇳',
+  'Japan': '🇯🇵',
+  'South Korea': '🇰🇷',
+  'India': '🇮🇳',
+  'Turkey': '🇹🇷',
+  'UAE': '🇦🇪',
+  'Canada': '🇨🇦',
+  'Australia': '🇦🇺',
+  'Brazil': '🇧🇷',
+  'Mexico': '🇲🇽',
+  'Italy': '🇮🇹',
+  'Spain': '🇪🇸',
+  'Netherlands': '🇳🇱',
+  'Poland': '🇵🇱',
+  'Ukraine': '🇺🇦',
+  'Uzbekistan': '🇺🇿',
+  'Kyrgyzstan': '🇰🇬',
+  'Tajikistan': '🇹🇯',
+  'Turkmenistan': '🇹🇲',
+  'Azerbaijan': '🇦🇿',
+  'Georgia': '🇬🇪',
+  'Armenia': '🇦🇲',
+  'Belarus': '🇧🇾',
+  'Moldova': '🇲🇩',
+};
+
+const getCountryFlag = (countryName: string): string => {
+  return COUNTRY_FLAGS[countryName] || '🌍';
+};
+
+export interface CountryWithFlag extends CountryDTO {
+  flag: string;
+}
+
 interface CountrySelectorProps {
-  selectedCountry: Country | null;
-  onSelect: (country: Country) => void;
+  selectedCountry: CountryWithFlag | null;
+  onSelect: (country: CountryWithFlag) => void;
   placeholder?: string;
+}
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
 }
 
 export function CountrySelector({
@@ -33,7 +93,40 @@ export function CountrySelector({
 }: CountrySelectorProps) {
   const theme = useAppTheme();
   const [modalVisible, setModalVisible] = useState(false);
+  const [countries, setCountries] = useState<CountryWithFlag[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const scale = useSharedValue(1);
+
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  // Fetch countries from API
+  const fetchCountries = useCallback(async (query?: string) => {
+    setIsLoading(true);
+    try {
+      const response = await locationsService.searchCountries({
+        q: query || undefined,
+        per_page: 50,
+      });
+      const countriesWithFlags = response.items.map(country => ({
+        ...country,
+        flag: getCountryFlag(country.name),
+      }));
+      setCountries(countriesWithFlags);
+    } catch (error) {
+      console.error('Failed to fetch countries:', error);
+      setCountries([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch on mount and when search changes
+  useEffect(() => {
+    if (modalVisible) {
+      fetchCountries(debouncedQuery);
+    }
+  }, [debouncedQuery, modalVisible, fetchCountries]);
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -47,44 +140,54 @@ export function CountrySelector({
     scale.value = withSpring(1);
   };
 
-  const handleSelect = (country: Country) => {
+  const handleSelect = (country: CountryWithFlag) => {
     onSelect(country);
     setModalVisible(false);
+    setSearchQuery('');
   };
 
-  const renderCountryItem = ({ item }: { item: Country }) => (
+  const handleOpen = () => {
+    setModalVisible(true);
+  };
+
+  const handleClose = () => {
+    setModalVisible(false);
+    setSearchQuery('');
+  };
+
+  const renderCountryItem = ({ item }: { item: CountryWithFlag }) => (
     <TouchableOpacity
-        style={[
-          styles.countryItem,
-          {
-            backgroundColor:
-              selectedCountry?.code === item.code
-                ? theme.colors.primary[50]
-                : 'transparent',
-            borderRadius: theme.borderRadius.lg,
-          },
-        ]}
-        onPress={() => handleSelect(item)}
-        activeOpacity={0.7}
+      style={[
+        styles.countryItem,
+        {
+          backgroundColor:
+            selectedCountry?.id === item.id
+              ? theme.colors.primary[50]
+              : 'transparent',
+          borderRadius: theme.borderRadius.lg,
+        },
+      ]}
+      onPress={() => handleSelect(item)}
+      activeOpacity={0.7}
+    >
+      <Text style={styles.flag}>{item.flag}</Text>
+      <Text
+        variant="body"
+        weight={selectedCountry?.id === item.id ? 'semibold' : 'regular'}
+        style={{ flex: 1 }}
       >
-        <Text style={styles.flag}>{item.flag}</Text>
-        <Text
-          variant="body"
-          weight={selectedCountry?.code === item.code ? 'semibold' : 'regular'}
-          style={{ flex: 1 }}
+        {item.name}
+      </Text>
+      {selectedCountry?.id === item.id && (
+        <View
+          style={[
+            styles.checkmark,
+            { backgroundColor: theme.colors.primary[500] },
+          ]}
         >
-          {item.name}
-        </Text>
-        {selectedCountry?.code === item.code && (
-          <View
-            style={[
-              styles.checkmark,
-              { backgroundColor: theme.colors.primary[500] },
-            ]}
-          >
-            <Text style={{ color: '#fff', fontSize: 12 }}>✓</Text>
-          </View>
-        )}
+          <Text style={{ color: '#fff', fontSize: 12 }}>✓</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -94,7 +197,7 @@ export function CountrySelector({
         <TouchableOpacity
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          onPress={() => setModalVisible(true)}
+          onPress={handleOpen}
           activeOpacity={1}
           style={[
             styles.selector,
@@ -129,12 +232,12 @@ export function CountrySelector({
         visible={modalVisible}
         transparent
         animationType="none"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={handleClose}
       >
         <Animated.View style={styles.modalOverlay}>
           <TouchableOpacity
             style={StyleSheet.absoluteFill}
-            onPress={() => setModalVisible(false)}
+            onPress={handleClose}
             activeOpacity={1}
           />
           <Animated.View
@@ -160,13 +263,57 @@ export function CountrySelector({
                 Select Country
               </Text>
             </View>
-            <FlatList
-              data={COUNTRIES}
-              keyExtractor={(item) => item.code}
-              renderItem={renderCountryItem}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-            />
+
+            {/* Search Input */}
+            <View
+              style={[
+                styles.searchContainer,
+                {
+                  backgroundColor: theme.colors.surfaceSecondary,
+                  borderRadius: theme.borderRadius.lg,
+                  marginHorizontal: 16,
+                  marginBottom: 12,
+                },
+              ]}
+            >
+              <Text style={{ fontSize: 16, marginRight: 8 }}>🔍</Text>
+              <TextInput
+                style={[
+                  styles.searchInput,
+                  { color: theme.colors.text.primary },
+                ]}
+                placeholder="Search countries..."
+                placeholderTextColor={theme.colors.text.tertiary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+                <Text variant="bodySmall" color="secondary" style={{ marginTop: 8 }}>
+                  Loading countries...
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={countries}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderCountryItem}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyState}>
+                    <Text variant="body" color="secondary" align="center">
+                      No countries found
+                    </Text>
+                  </View>
+                }
+              />
+            )}
           </Animated.View>
         </Animated.View>
       </Modal>
@@ -213,6 +360,17 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    padding: 0,
+  },
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 20,
@@ -230,5 +388,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyState: {
+    paddingVertical: 40,
   },
 });

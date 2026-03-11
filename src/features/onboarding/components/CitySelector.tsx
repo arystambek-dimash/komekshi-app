@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   FlatList,
   Dimensions,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -17,15 +18,32 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Text } from '@/src/shared/components/ui';
 import { useAppTheme } from '@/src/shared/theme';
-import { Country } from '../constants/locations';
+import { locationsService } from '@/src/shared/api/services';
+import { CityDTO } from '@/src/shared/api/types';
+import { CountryWithFlag } from './CountrySelector';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface CitySelectorProps {
-  country: Country | null;
-  selectedCity: string | null;
-  onSelect: (city: string) => void;
+  country: CountryWithFlag | null;
+  selectedCity: CityDTO | null;
+  onSelect: (city: CityDTO) => void;
   placeholder?: string;
+}
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
 }
 
 export function CitySelector({
@@ -36,16 +54,44 @@ export function CitySelector({
 }: CitySelectorProps) {
   const theme = useAppTheme();
   const [modalVisible, setModalVisible] = useState(false);
+  const [cities, setCities] = useState<CityDTO[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const scale = useSharedValue(1);
 
-  const filteredCities = useMemo(() => {
-    if (!country) return [];
-    if (!searchQuery) return country.cities;
-    return country.cities.filter((city) =>
-      city.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [country, searchQuery]);
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  // Fetch cities from API
+  const fetchCities = useCallback(async (query?: string) => {
+    if (!country) return;
+
+    setIsLoading(true);
+    try {
+      const response = await locationsService.searchCities({
+        country_id: country.id,
+        q: query || undefined,
+        per_page: 50,
+      });
+      setCities(response.items);
+    } catch (error) {
+      console.error('Failed to fetch cities:', error);
+      setCities([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [country]);
+
+  // Fetch when modal opens or search changes
+  useEffect(() => {
+    if (modalVisible && country) {
+      fetchCities(debouncedQuery);
+    }
+  }, [debouncedQuery, modalVisible, country, fetchCities]);
+
+  // Reset cities when country changes
+  useEffect(() => {
+    setCities([]);
+  }, [country?.id]);
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -64,7 +110,7 @@ export function CitySelector({
     setSearchQuery('');
   };
 
-  const handleSelect = (city: string) => {
+  const handleSelect = (city: CityDTO) => {
     onSelect(city);
     handleClose();
   };
@@ -75,39 +121,39 @@ export function CitySelector({
     }
   };
 
-  const renderCityItem = ({ item }: { item: string }) => (
+  const renderCityItem = ({ item }: { item: CityDTO }) => (
     <TouchableOpacity
-        style={[
-          styles.cityItem,
-          {
-            backgroundColor:
-              selectedCity === item ? theme.colors.primary[50] : 'transparent',
-            borderRadius: theme.borderRadius.lg,
-          },
-        ]}
-        onPress={() => handleSelect(item)}
-        activeOpacity={0.7}
+      style={[
+        styles.cityItem,
+        {
+          backgroundColor:
+            selectedCity?.id === item.id ? theme.colors.primary[50] : 'transparent',
+          borderRadius: theme.borderRadius.lg,
+        },
+      ]}
+      onPress={() => handleSelect(item)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cityIcon}>
+        <Text style={{ fontSize: 20 }}>📍</Text>
+      </View>
+      <Text
+        variant="body"
+        weight={selectedCity?.id === item.id ? 'semibold' : 'regular'}
+        style={{ flex: 1 }}
       >
-        <View style={styles.cityIcon}>
-          <Text style={{ fontSize: 20 }}>📍</Text>
-        </View>
-        <Text
-          variant="body"
-          weight={selectedCity === item ? 'semibold' : 'regular'}
-          style={{ flex: 1 }}
+        {item.name}
+      </Text>
+      {selectedCity?.id === item.id && (
+        <View
+          style={[
+            styles.checkmark,
+            { backgroundColor: theme.colors.primary[500] },
+          ]}
         >
-          {item}
-        </Text>
-        {selectedCity === item && (
-          <View
-            style={[
-              styles.checkmark,
-              { backgroundColor: theme.colors.primary[500] },
-            ]}
-          >
-            <Text style={{ color: '#fff', fontSize: 12 }}>✓</Text>
-          </View>
-        )}
+          <Text style={{ color: '#fff', fontSize: 12 }}>✓</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -140,7 +186,7 @@ export function CitySelector({
             <View style={styles.selectedContent}>
               <Text style={{ fontSize: 24 }}>📍</Text>
               <Text variant="body" weight="medium">
-                {selectedCity}
+                {selectedCity.name}
               </Text>
             </View>
           ) : (
@@ -220,20 +266,29 @@ export function CitySelector({
               />
             </View>
 
-            <FlatList
-              data={filteredCities}
-              keyExtractor={(item) => item}
-              renderItem={renderCityItem}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <View style={styles.emptyState}>
-                  <Text variant="body" color="secondary" align="center">
-                    No cities found
-                  </Text>
-                </View>
-              }
-            />
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+                <Text variant="bodySmall" color="secondary" style={{ marginTop: 8 }}>
+                  Loading cities...
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={cities}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderCityItem}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyState}>
+                    <Text variant="body" color="secondary" align="center">
+                      No cities found
+                    </Text>
+                  </View>
+                }
+              />
+            )}
           </Animated.View>
         </Animated.View>
       </Modal>
@@ -310,6 +365,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
   },
   emptyState: {
     paddingVertical: 40,

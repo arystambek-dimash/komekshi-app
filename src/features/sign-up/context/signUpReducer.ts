@@ -8,7 +8,9 @@ export const initialState: SignUpState = {
   otpCode: '',
   name: '',
   country: '',
+  countryId: null,
   city: '',
+  cityId: null,
   selectedSkills: [],
   targetJob: null,
   isAnalyzing: false,
@@ -54,10 +56,10 @@ export function signUpReducer(state: SignUpState, action: SignUpAction): SignUpS
       return { ...state, name: action.payload, errors: { ...state.errors, name: undefined } };
 
     case 'SET_COUNTRY':
-      return { ...state, country: action.payload };
+      return { ...state, country: action.payload.name, countryId: action.payload.id, city: '', cityId: null };
 
     case 'SET_CITY':
-      return { ...state, city: action.payload };
+      return { ...state, city: action.payload.name, cityId: action.payload.id };
 
     case 'TOGGLE_SKILL': {
       const skill = action.payload;

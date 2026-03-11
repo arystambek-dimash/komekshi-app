@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './tokenStorage';
 import { TokenResponse } from './types';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://a237-176-98-225-53.ngrok-free.app';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://9387-2-57-97-67.ngrok-free.app';
 
 let isRefreshing = false;
 let failedQueue: Array<{

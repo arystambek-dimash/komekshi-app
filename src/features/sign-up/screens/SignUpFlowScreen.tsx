@@ -10,6 +10,7 @@ import {
   NameStep,
   MarketRegionStep,
   TargetJobStep,
+  SkillsStep,
   AnalyzingStep,
 } from '../components/steps';
 
@@ -33,6 +34,8 @@ export function SignUpFlowScreen() {
         return <MarketRegionStep />;
       case 'targetJob':
         return <TargetJobStep />;
+      case 'skills':
+        return <SkillsStep />;
       case 'analyzing':
         return <AnalyzingStep />;
       default:
