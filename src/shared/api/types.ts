@@ -191,7 +191,7 @@ export type InterviewAnswerStatus = 'need_followup' | 'final' | 'completed';
 export interface InterviewAnswerResponse {
   status: InterviewAnswerStatus;
   feedback?: string;
-  transcription?: string; // User's transcribed speech
+  user_answer_text?: string; // User's transcribed speech
   // For need_followup status
   followup_question?: InterviewQuestion;
   followup_count?: number;

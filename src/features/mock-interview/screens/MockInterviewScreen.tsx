@@ -272,11 +272,11 @@ export function MockInterviewScreen() {
       const result = await submitAnswer(audioUri);
 
       // Add user's transcribed answer
-      if (result.transcription) {
+      if (result.user_answer_text) {
         appendMessage({
           role: 'candidate',
           type: 'text',
-          text: result.transcription,
+          text: result.user_answer_text,
         });
       }
 
