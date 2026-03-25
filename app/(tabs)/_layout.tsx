@@ -40,6 +40,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="vacancies"
+        options={{
+          title: 'Vacancies',
+          tabBarIcon: ({ color }) => <TabBarIcon name="briefcase-outline" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

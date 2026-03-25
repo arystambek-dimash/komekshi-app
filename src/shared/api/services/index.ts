@@ -7,3 +7,4 @@ export { locationsService } from './locationsService';
 export { directionsService } from './directionsService';
 export { skillsService } from './skillsService';
 export { learningService } from './learningService';
+export { vacanciesService } from './vacanciesService';

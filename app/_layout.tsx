@@ -98,10 +98,17 @@ function RootLayoutNav() {
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="module/[id]" />
+          <Stack.Screen name="vacancy/[id]" />
           <Stack.Screen
             name="mock-interview"
             options={{
               gestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="edit-profile"
+            options={{
               animation: 'slide_from_right',
             }}
           />

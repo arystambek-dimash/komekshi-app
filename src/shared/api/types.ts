@@ -69,6 +69,9 @@ export interface UserProfileUpdateSchema {
   new_password?: string;
   name?: string;
   city_id?: number;
+  direction_id?: number;
+  skill_ids?: number[];
+  timezone?: string;
 }
 
 export interface StreakDTO {
@@ -227,4 +230,33 @@ export interface PaginatedResponse<T> {
 // ============ API Error Types ============
 export interface APIError {
   detail: string | { msg: string; type: string }[];
+}
+
+// ============ Vacancy Types ============
+export interface VacancySkillDTO {
+  vacancy_id: number;
+  skill_id: number;
+  skill?: SkillDTO;
+}
+
+export interface VacancyDTO {
+  id: number;
+  title: string;
+  direction_id: number;
+  city_id: number;
+  salary_amount: number;
+  salary_currency: string;
+  vacancy_type: 'online' | 'offline';
+  url: string;
+  created_at: string;
+  updated_at: string;
+  vacancy_skills?: VacancySkillDTO[];
+  city?: CityDTO;
+  direction?: DirectionDTO;
+}
+
+export interface UserVacancyDTO {
+  user_id: number;
+  vacancy_id: number;
+  vacancy?: VacancyDTO;
 }

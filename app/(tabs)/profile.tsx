@@ -48,7 +48,7 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    // Navigate to edit profile screen
+    router.push('/edit-profile');
   };
 
   // Get user data from auth store
