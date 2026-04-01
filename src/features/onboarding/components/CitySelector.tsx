@@ -13,8 +13,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  SlideInDown,
-  SlideOutDown,
 } from 'react-native-reanimated';
 import { Text } from '@/src/shared/components/ui';
 import { useAppTheme } from '@/src/shared/theme';
@@ -203,18 +201,16 @@ export function CitySelector({
       <Modal
         visible={modalVisible}
         transparent
-        animationType="none"
+        animationType="slide"
         onRequestClose={handleClose}
       >
-        <Animated.View style={styles.modalOverlay}>
+        <View style={styles.modalOverlay}>
           <TouchableOpacity
             style={StyleSheet.absoluteFill}
             onPress={handleClose}
             activeOpacity={1}
           />
-          <Animated.View
-            entering={SlideInDown.duration(300)}
-            exiting={SlideOutDown.duration(250)}
+          <View
             style={[
               styles.modalContent,
               {
@@ -289,8 +285,8 @@ export function CitySelector({
                 }
               />
             )}
-          </Animated.View>
-        </Animated.View>
+          </View>
+        </View>
       </Modal>
     </>
   );
