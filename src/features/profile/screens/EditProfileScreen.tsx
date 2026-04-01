@@ -33,6 +33,18 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+function extractSkills(user: ReturnType<typeof useAuthStore.getState>['user']): SkillDTO[] {
+  const source = (user?.skills && user.skills.length > 0) ? user.skills : user?.modules;
+  if (!source || source.length === 0) return [];
+  const raw = source.filter((m) => m.skill).map((m) => m.skill!);
+  const seen = new Set<number>();
+  return raw.filter((s) => {
+    if (seen.has(s.id)) return false;
+    seen.add(s.id);
+    return true;
+  });
+}
+
 export function EditProfileScreen() {
   const theme = useAppTheme();
   const router = useRouter();
@@ -52,21 +64,32 @@ export function EditProfileScreen() {
   const [directionResults, setDirectionResults] = useState<DirectionDTO[]>([]);
   const [showDirectionDropdown, setShowDirectionDropdown] = useState(false);
 
-  const [selectedSkills, setSelectedSkills] = useState<SkillDTO[]>(() => {
-    const raw: SkillDTO[] = [];
-    if (user?.skills && user.skills.length > 0) {
-      raw.push(...user.skills);
-    } else if (user?.modules && user.modules.length > 0) {
-      raw.push(...user.modules.filter((m) => m.skill).map((m) => m.skill!));
+  const [selectedSkills, setSelectedSkills] = useState<SkillDTO[]>(() => extractSkills(user));
+
+  // Fetch fresh profile on mount to ensure skills, city, and direction are populated
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  useEffect(() => {
+    fetchProfile().finally(() => setProfileLoaded(true));
+  }, []);
+
+  // Sync form state when user data updates from fetch (only on initial load)
+  useEffect(() => {
+    if (!profileLoaded || !user) return;
+    // Only update fields that are still at their default/empty values
+    if (!selectedCountry && user.city?.country) {
+      setSelectedCountry({ ...user.city.country, flag: '' });
     }
-    // Deduplicate by id
-    const seen = new Set<number>();
-    return raw.filter((s) => {
-      if (seen.has(s.id)) return false;
-      seen.add(s.id);
-      return true;
-    });
-  });
+    if (!selectedCity && user.city) {
+      setSelectedCity(user.city);
+    }
+    if (!selectedDirection && user.direction) {
+      setSelectedDirection(user.direction);
+    }
+    const freshSkills = extractSkills(user);
+    if (selectedSkills.length === 0 && freshSkills.length > 0) {
+      setSelectedSkills(freshSkills);
+    }
+  }, [profileLoaded, user]);
   const [skillQuery, setSkillQuery] = useState('');
   const [skillResults, setSkillResults] = useState<SkillDTO[]>([]);
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
@@ -127,6 +150,28 @@ export function EditProfileScreen() {
     setShowSkillDropdown(false);
   };
 
+  const [isCreatingSkill, setIsCreatingSkill] = useState(false);
+
+  const handleCreateAndAddSkill = async () => {
+    const trimmed = skillQuery.trim();
+    if (!trimmed) return;
+    // Check if already selected
+    if (selectedSkills.some((s) => s.name.toLowerCase() === trimmed.toLowerCase())) {
+      setSkillQuery('');
+      setShowSkillDropdown(false);
+      return;
+    }
+    setIsCreatingSkill(true);
+    try {
+      const newSkill = await skillsService.create(trimmed);
+      handleAddSkill(newSkill);
+    } catch {
+      Alert.alert('Error', 'Failed to add skill. Please try again.');
+    } finally {
+      setIsCreatingSkill(false);
+    }
+  };
+
   const handleRemoveSkill = (skillId: number) => {
     setSelectedSkills((prev) => prev.filter((s) => s.id !== skillId));
   };
@@ -149,7 +194,7 @@ export function EditProfileScreen() {
       data.direction_id = selectedDirection.id;
     }
 
-    const currentSkillIds = (user?.skills || []).map((s) => s.id).sort();
+    const currentSkillIds = (user?.skills || []).map((s) => s.skill_id).sort();
     const newSkillIds = selectedSkills.map((s) => s.id).sort();
     if (JSON.stringify(currentSkillIds) !== JSON.stringify(newSkillIds)) {
       data.skill_ids = newSkillIds;
@@ -314,8 +359,10 @@ export function EditProfileScreen() {
                 }}
                 onFocus={() => setShowSkillDropdown(true)}
                 onBlur={() => setTimeout(() => setShowSkillDropdown(false), 200)}
+                onSubmitEditing={handleCreateAndAddSkill}
+                returnKeyType="done"
               />
-              {showSkillDropdown && skillResults.length > 0 && (
+              {showSkillDropdown && (skillResults.length > 0 || skillQuery.trim()) && (
                 <View style={[styles.dropdown, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border.default }]}>
                   {skillResults.map((skill) => (
                     <TouchableOpacity
@@ -326,6 +373,24 @@ export function EditProfileScreen() {
                       <Text style={{ color: theme.colors.text.primary }}>{skill.name}</Text>
                     </TouchableOpacity>
                   ))}
+                  {skillQuery.trim() && !skillResults.some((s) => s.name.toLowerCase() === skillQuery.trim().toLowerCase()) && (
+                    <TouchableOpacity
+                      style={[styles.dropdownItem, { borderBottomColor: theme.colors.border.default }]}
+                      onPress={handleCreateAndAddSkill}
+                      disabled={isCreatingSkill}
+                    >
+                      <View style={styles.createSkillRow}>
+                        {isCreatingSkill ? (
+                          <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+                        ) : (
+                          <Ionicons name="add-circle-outline" size={18} color={theme.colors.primary[500]} />
+                        )}
+                        <Text style={{ color: theme.colors.primary[500], fontWeight: '600', marginLeft: 8 }}>
+                          Add "{skillQuery.trim()}"
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
             </View>
@@ -477,6 +542,10 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  createSkillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   passwordToggle: {
     flexDirection: 'row',

@@ -48,7 +48,7 @@ export interface UserDTO {
   longest_streak: number;
   last_interview_day?: string;
   timezone?: string;
-  skills?: SkillDTO[];
+  skills?: UserSkillDTO[];
   modules?: UserSkillDTO[];
   direction?: DirectionDTO;
   city?: CityDTO;

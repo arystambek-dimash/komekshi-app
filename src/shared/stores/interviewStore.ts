@@ -84,7 +84,7 @@ export const useInterviewStore = create<InterviewStore>((set, get) => ({
         let currentQuestion: InterviewQuestion | null = null;
 
         if (activeSession.current_interview_question_id) {
-          currentQuestion = await interviewService.getCurrentQuestion(activeSession.session_id);
+          currentQuestion = await interviewService.getQuestionById(activeSession.current_interview_question_id);
         }
 
         // Create session object

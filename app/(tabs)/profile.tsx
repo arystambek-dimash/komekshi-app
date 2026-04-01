@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Text } from '@/src/shared/components/ui';
 import { useAppTheme } from '@/src/shared/theme';
-import { useAuthStore } from '@/src/shared/stores';
+import { useAuthStore, useUserStore } from '@/src/shared/stores';
 
 
 interface ProfileSectionProps {
@@ -40,6 +40,12 @@ export default function ProfileScreen() {
   const router = useRouter();
   const theme = useAppTheme();
   const { user, logout } = useAuthStore();
+  const { fetchProfile } = useUserStore();
+
+  // Refresh profile on mount to ensure skills, city, and country are populated
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
     // Clear auth state and tokens, then navigate to sign-in
@@ -58,16 +64,12 @@ export default function ProfileScreen() {
   const userCity = user?.city?.name || 'Not set';
   const userDirection = user?.direction?.name || 'Not set';
 
-  // Skills can come from 'skills' array or 'modules' array (with nested skill object)
+  // Skills come from 'skills' or 'modules' array (both are UserSkillDTO[] with nested skill)
   const userSkills: string[] = (() => {
-    // First try direct skills array
-    if (user?.skills && user.skills.length > 0) {
-      return user.skills.map((s) => s.name).filter(Boolean);
-    }
-    // Fallback to modules array (skill is nested)
-    if (user?.modules && user.modules.length > 0) {
-      return user.modules
-        .map((m) => m.skill?.name)
+    const source = (user?.skills && user.skills.length > 0) ? user.skills : user?.modules;
+    if (source && source.length > 0) {
+      return source
+        .map((s) => s.skill?.name)
         .filter((name): name is string => Boolean(name));
     }
     return [];
@@ -144,17 +146,19 @@ export default function ProfileScreen() {
         </ProfileSection>
 
         {/* Skills Section */}
-        {userSkills.length > 0 && (
-          <ProfileSection title="Skills" icon="code-slash-outline" delay={400} theme={theme}>
-            <View style={[styles.skillsContainer, {backgroundColor: theme.colors.surface}]}>
-              {userSkills.map((skill) => (
+        <ProfileSection title="Skills" icon="code-slash-outline" delay={400} theme={theme}>
+          <View style={[styles.skillsContainer, {backgroundColor: theme.colors.surface}]}>
+            {userSkills.length > 0 ? (
+              userSkills.map((skill) => (
                 <View key={skill} style={[styles.skillChip, {backgroundColor: theme.colors.primary[50]}]}>
                   <Text style={[styles.skillText, {color: theme.colors.primary[500]}]}>{skill}</Text>
                 </View>
-              ))}
-            </View>
-          </ProfileSection>
-        )}
+              ))
+            ) : (
+              <Text style={[styles.emptyText, {color: theme.colors.text.tertiary}]}>No skills added yet</Text>
+            )}
+          </View>
+        </ProfileSection>
 
         {/* Account Actions */}
         <Animated.View
@@ -371,6 +375,10 @@ const styles = StyleSheet.create({
   skillText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   actionsSection: {
     borderRadius: 16,

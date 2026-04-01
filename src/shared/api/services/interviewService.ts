@@ -15,14 +15,23 @@ export const interviewService = {
     return response.data;
   },
 
-  async getCurrentQuestion(sessionId: number): Promise<InterviewQuestion | null> {
+  async getQuestionById(interviewQuestionId: number): Promise<InterviewQuestion | null> {
     try {
-      const response = await apiClient.get<InterviewQuestion>(
-        `/interviews/${sessionId}/current-question`
-      );
-      return response.data;
+      const response = await apiClient.get<{
+        id: number;
+        session_id: number;
+        question_id: number;
+        question_text: string;
+        is_followup: boolean;
+        main_question_id: number;
+        followup_index: number;
+      }>(`/interviews/questions/${interviewQuestionId}`);
+      return {
+        interview_question_id: response.data.id,
+        question_id: response.data.question_id,
+        text: response.data.question_text,
+      };
     } catch {
-      // Endpoint might not exist, return null
       return null;
     }
   },
