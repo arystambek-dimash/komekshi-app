@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -22,14 +22,25 @@ export function HomeScreen() {
     isLoading,
   } = useUserStore();
 
-  useEffect(() => {
-    // Fetch all data in parallel
-    Promise.all([
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = useCallback(async () => {
+    await Promise.all([
       fetchStreak().catch(() => {}),
       fetchStatistics().catch(() => {}),
       fetchSalary().catch(() => {}),
     ]);
-  }, []);
+  }, [fetchStreak, fetchStatistics, fetchSalary]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
   const handleMockInterviewPress = () => {
     router.push('/mock-interview');
@@ -58,6 +69,14 @@ export function HomeScreen() {
           { paddingHorizontal: theme.spacing.lg },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary[500]}
+            colors={[theme.colors.primary[500]]}
+          />
+        }
       >
         {/* Greeting */}
         <Animated.View

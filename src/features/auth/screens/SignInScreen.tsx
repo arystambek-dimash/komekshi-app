@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { Screen } from '../../../shared/components/layout';
 import { Button, Input, Text } from '../../../shared/components/ui';
 import { useAppTheme } from '../../../shared/theme';
@@ -35,28 +34,6 @@ export function SignInScreen() {
         router.replace('/(tabs)');
       } else {
         router.replace('/onboarding');
-      }
-    } catch (err) {
-      setLocalError(getErrorMessage(err));
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const authUrl = authService.getGoogleOAuthUrl();
-      const result = await WebBrowser.openAuthSessionAsync(authUrl);
-      if (result.type === 'success' && result.url) {
-        // The callback URL would contain tokens - handle accordingly
-        // For now, re-initialize auth state
-        await useAuthStore.getState().initialize();
-        const user = useAuthStore.getState().user;
-        if (user) {
-          if (user.is_onboarding_completed) {
-            router.replace('/(tabs)');
-          } else {
-            router.replace('/onboarding');
-          }
-        }
       }
     } catch (err) {
       setLocalError(getErrorMessage(err));
@@ -182,24 +159,6 @@ export function SignInScreen() {
         </Button>
       </View>
 
-      {/* Google Sign In */}
-      <View style={[styles.socialAuth, { marginTop: theme.spacing.xl }]}>
-        <Button
-          onPress={handleGoogleSignIn}
-          variant="outline"
-          size="lg"
-          icon={
-            <Image
-              source={{ uri: 'https://www.google.com/favicon.ico' }}
-              style={styles.googleIcon}
-            />
-          }
-          iconPosition="left"
-        >
-          Login with Google
-        </Button>
-      </View>
-
       {/* Sign Up Link */}
       <View style={[styles.signUpContainer, { marginTop: theme.spacing.xl }]}>
         <Text variant="body" color="secondary">
@@ -226,11 +185,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   actions: {},
-  socialAuth: {},
-  googleIcon: {
-    width: 20,
-    height: 20,
-  },
   signUpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

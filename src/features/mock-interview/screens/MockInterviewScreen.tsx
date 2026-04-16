@@ -379,7 +379,7 @@ export function MockInterviewScreen() {
   const micDisabled = status === 'processing' || status === 'playing' || status === 'starting' || status === 'completed' || isSubmitting;
 
   const progressPercentage = session
-    ? ((session.main_question_index + 1) / session.total_main_questions) * 100
+    ? (session.main_question_index / session.total_main_questions) * 100
     : 0;
 
   // Completed screen
@@ -440,7 +440,7 @@ export function MockInterviewScreen() {
           {session && (
             <View style={styles.progressInfo}>
               <Text style={[styles.progressText, { color: theme.colors.text.tertiary }]}>
-                Question {session.main_question_index + 1} of {session.total_main_questions}
+                Question {session.main_question_index} of {session.total_main_questions}
               </Text>
             </View>
           )}

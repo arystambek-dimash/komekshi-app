@@ -60,9 +60,4 @@ export const authService = {
   async logout(): Promise<void> {
     await clearTokens();
   },
-
-  getGoogleOAuthUrl(): string {
-    const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'https://a237-176-98-225-53.ngrok-free.app';
-    return `${baseUrl}/auth/oauth/google/start`;
-  },
 };
