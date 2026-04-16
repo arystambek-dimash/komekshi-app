@@ -25,9 +25,9 @@ function formatSalary(amount: number, currency: string): string {
   });
 
   try {
-    return `${formatter.format(amount)}/year`;
+    return `${formatter.format(amount)}/month`;
   } catch {
-    return `$${amount.toLocaleString()}/year`;
+    return `$${amount.toLocaleString()}/month`;
   }
 }
 
